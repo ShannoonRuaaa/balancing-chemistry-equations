@@ -1,5 +1,5 @@
 import numpy as np
-
+from fractions import Fraction
 def chemical_formula(formula):
     chemicals = []
     numbers = []
@@ -31,35 +31,31 @@ def chemical_formula(formula):
             numbers[i] = numbers[i] * mulpiliter
         return chemicals, numbers
 
-def row_reduction(arr):
-    l = len(arr)
-    for i in range(l-1):
-        # find largest piviot
-        greatest_val = np.abs(arr[i][i])
-        index = i
-        for j in range(i,l):
-             if np.abs(arr[j][i] )> greatest_val:
-                index = j
-                greatest_val = np.abs(arr[j][i])
-        #exchanges pivots
-        # if greatest_val == 0: return arr
-        temp = arr[i]
-        arr[i] = arr[index]
-        arr[index] = temp
-    #subtract each by muylt
-        for j in range(i+1, l):
-            arr[j] = np.subtract(np.multiply(arr[j], arr[i][i]), np.multiply(arr[i], arr[j][i]))
-
-
-    for i in range(l-1, 0, -1):
-        for j in range(i-1, -1, -1):
-            if arr[i][i]!=0:
-                arr[j] = np.subtract(np.multiply(arr[j], arr[i][i]), np.multiply(arr[i], arr[j][i]))
-
-    for i in range(l):
-        if arr[i][i]!=0:
-            arr[i] = np.divide(arr[i], arr[i][i])
-    return arr
+def rref(matrix):
+    tol = 1e-10  # Tolerance for floating-point comparisons
+    lead = 0
+    rowCount, columnCount = matrix.shape
+    rank = 0  # Initialize rank
+    for r in range(rowCount):
+        if lead >= columnCount:
+            return rank
+        i = r
+        while abs(matrix[i, lead]) < tol:
+            i += 1
+            if i == rowCount:
+                i = r
+                lead += 1
+                if columnCount == lead:
+                    return rank
+        matrix[[i, r]] = matrix[[r, i]]
+        if abs(matrix[r, lead] - 0.0) > tol:
+            matrix[r] /= matrix[r, lead]
+        for i in range(rowCount):
+            if i != r:
+                matrix[i] -= matrix[i, lead] * matrix[r]
+        lead += 1
+        rank += 1  # Increment rank
+    return rank
 
 def split_formula(formula):
     reactants = []
@@ -76,20 +72,7 @@ def split_formula(formula):
         else:
             products.append(i)
     return reactants, products
-def transpose(matrix):
-    if not all(isinstance(row, list) for row in matrix):
-        raise TypeError("Input must be a 2D list")
 
-    num_rows = len(matrix)
-    num_cols = len(matrix[0])
-
-    transposed_matrix = [[0 for _ in range(num_rows)] for _ in range(num_cols)]
-
-    for i in range(num_rows):
-        for j in range(num_cols):
-            transposed_matrix[j][i] = matrix[i][j]
-
-    return transposed_matrix
 
 def unique (combined_list):
     unique_list = []
@@ -114,7 +97,6 @@ for i in product:
     chemical, numbers = chemical_formula(i)
     right_equation.append([chemical, numbers])
 
-arr = [[1,2,3,4,5],[6,7,8,9,10]]
 
 total_elements = unique(total_elements)
 
@@ -126,33 +108,40 @@ for t in range(len(left_equation)):
     for j in total_elements:
         if index < len(left_equation[t][0]):
             if left_equation[t][0][index] == j:
-                Matrix.append(left_equation[t][1][index])
+                Matrix.append(Fraction(left_equation[t][1][index], 1))
                 index+=1
             else:
-                Matrix.append(0)
-        else: Matrix.append(0)
+                Matrix.append(Fraction(0,1))
+        else: Matrix.append(Fraction(0,1))
     matrix.append(Matrix)
 
 for t in range(len(right_equation)):
     Matrix = []
     index = 0
     for j in total_elements:
-        if right_equation[t][0][index] == j:
-            Matrix.append(right_equation[t][1][index])
-            index+=1
-        else:
-            Matrix.append(0)
+        if index < len(right_equation[t][0]):
+            if right_equation[t][0][index] == j:
+                Matrix.append(Fraction(right_equation[t][1][index]))
+                index+=1
+            else:
+                Matrix.append(Fraction(0,1))
+        else: Matrix.append(Fraction(0,1))
     matrix.append(Matrix)
-
-matrix = transpose(matrix)
-matrix = row_reduction(matrix)
+# print(matrix)
+matrix = np.transpose(np.array(matrix))
+rank= rref(matrix)
+# print(matrix)
+# print(rank)
 ans = []
-for i in range(0,len(matrix[0])):
-    if i < len(matrix):
-        if matrix[i][-1]!=0:
-            ans.append(-matrix[i][-1])
-        else: ans.append(1)
-    else: ans.append(1.0)
+for i in range(0,rank):
+    sub = [matrix[i][rank::]]
+    ans.append(sub)
+# ans.append(np.eye(len(matrix[0])-rank,dtype=Fraction))
+I = np.eye(len(matrix[0])-rank, dtype=Fraction)
+for i in range(len(matrix[0]) - rank):
+    ans.append([I[i]])
+frac = Fraction(1,2)
+
 print(ans)
 # print(total_elements)
 # print (left_equation)
