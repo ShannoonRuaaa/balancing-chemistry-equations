@@ -134,15 +134,45 @@ rank= rref(matrix)
 # print(rank)
 ans = []
 for i in range(0,rank):
-    sub = [matrix[i][rank::]]
+    sub = matrix[i][rank::]
     ans.append(sub)
+# print(ans)
 # ans.append(np.eye(len(matrix[0])-rank,dtype=Fraction))
-I = np.eye(len(matrix[0])-rank, dtype=Fraction)
-for i in range(len(matrix[0]) - rank):
-    ans.append([I[i]])
-frac = Fraction(1,2)
+I  = np.array([[Fraction(1) if i == j else Fraction(0) for j in range(len(matrix[0]) - rank)] for i in range(len(matrix[0]) - rank)], dtype=object)
 
-print(ans)
+for i in range(len(matrix[0]) - rank):
+    ans.append(I[i])
+# print(ans)
+ans = np.transpose(ans)
+for i in range(len(ans)):
+    for j in range (len(ans[i])):
+        denom = ans[i][j].denominator
+        ans[i] = np.multiply(ans[i], denom)
+
+st =[]
+for i in range(len(ans)):
+    temp = ""
+    for j in range(len(ans[i])):
+        if j<len(reactants):
+            if ans[i][j].numerator >1:
+                temp += str(ans[i][j].numerator)
+            temp+= reactants[j] + " "
+            if j+1== len(reactants):
+                temp+= "-> "
+            else:
+                temp+= "+ "
+                # temp += str(ans[i][j].numerator) + reactants[j] + "+"
+        else:
+            if ans[i][j].numerator >1:
+                temp+= str(ans[i][j].numerator)
+            temp+= product[j-len(reactants)] + " "
+            if j+1 != len(ans[i]):
+                temp+="+ "
+    st.append(temp)
+print(st)
+# print(ans)
 # print(total_elements)
 # print (left_equation)
 # print (right_equation)
+frac = Fraction(1)
+frac.numerator
